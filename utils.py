@@ -7,6 +7,7 @@ import json
 from datetime import datetime
 global file_names
 global fptr
+from timeit import default_timer as timer
 
 ROOT = "../Smart-VMI/data/new"
 VALIDATION_PATH = "../Smart-VMI/data/validation"
@@ -426,21 +427,21 @@ def get_splits(path, val_per=0.15, test_per=0.15, random_state=42):
     from sklearn.model_selection import train_test_split
     import time
 
-    start = time.time()
+    start = timer()
     file_paths, key_paths = get_dataset_file_paths(path)
-    end = time.time()
+    end = timer()
     print_('Time taken for finding all files: %f' % (end - start))
 
-    start = time.time()
+    start = timer()
     train_files, val_files, train_keys, val_keys, = \
         train_test_split(file_paths, key_paths, test_size=test_per, random_state=random_state)
-    end = time.time()
+    end = timer()
     print_('Time taken for splitting: %f' % (end - start))
 
-    start = time.time()
+    start = timer()
     train_files, test_files, train_keys, test_keys, = \
         train_test_split(train_files, train_keys, test_size=val_per, random_state=random_state)
-    end = time.time()
+    end = timer()
     print_('Time taken for secondary splitting: %f' % (end - start))
 
     return train_files, train_keys, test_files, test_keys, val_files, val_keys
@@ -567,28 +568,28 @@ def train_classifier(dataset, labels, test_paths=[], test_keys=[], retrain_rf=Fa
 def load_models(load_high_recall_only=False):
     import time
     import pickle
-    start = time.time()
+    start = timer()
     path = os.path.join(MODEL_PATH, 'resampled_clf_entropy.pkl')
     with open(path, 'rb') as fp:
         resampled_clf = pickle.load(fp)
-    end = time.time()
+    end = timer()
     print_('Time taken for loading high recall classifier: %f' % (end - start))
 
     if load_high_recall_only is True:
         return resampled_clf
     
-    start = time.time()
+    start = timer()
     path = os.path.join(MODEL_PATH, 'rf_entropy.pkl')
     with open(path, 'rb') as fp:
         rf = pickle.load(fp)
-    end = time.time()
+    end = timer()
     print_('Time taken for loading high precision classifier: %f' % (end - start))
 
-    start = time.time()
+    start = timer()
     path = os.path.join(MODEL_PATH, 'secondary_clf_entropy.pkl')
     with open(path, 'rb') as fp:
         final_clf = pickle.load(fp)
-    end = time.time()
+    end = timer()
     print_('Time taken for loading secondary classifier: %f' % (end - start))
 
     clf = WrappedClassifier(resampled_classifier=resampled_clf, classifier=rf, final_stage_classifier=final_clf)
