@@ -1,4 +1,0 @@
-2022-04-27 09:21:23.737581:	Time taken for loading high recall classifier: 0.934047
-2022-04-27 09:21:23.740675:	Time taken for finding all files: 0.000536
-2022-04-27 09:21:23.778110:	Total time taken for file /Users/stewartsentanoe/Documents/Uni Passau/projects/SmartVMI/Use Case 1 Data/temp/11173-1651043825-heap.raw: 0.035105
-2022-04-27 09:21:23.809630:	Total time taken for file /Users/stewartsentanoe/Documents/Uni Passau/projects/SmartVMI/Use Case 1 Data/temp/11176-1651043825-heap.raw: 0.031450
