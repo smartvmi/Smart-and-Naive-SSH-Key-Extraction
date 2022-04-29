@@ -292,6 +292,8 @@ func main() {
 			to := i + (16 * (x + 1)) //IV 16 bytes
 			potentialIV := cleanHeap[from:to]
 			//go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, to)
+
+			//this we assume that the KEY will be always exist after the IV
 			go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, to)
 			x++
 		}

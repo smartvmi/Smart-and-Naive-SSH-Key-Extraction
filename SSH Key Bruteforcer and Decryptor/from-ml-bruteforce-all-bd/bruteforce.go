@@ -288,6 +288,8 @@ func main() {
 					//for key B and D, we have do decrement the key by 2
 					//decrementIV(potentialIV)
 					//decrementIV(potentialIV)
+
+					//offset from 0 since the Key C can be exist before key A in the slice, so better to run it from the beginning again
 					go bruteforceKey(&wg, potentialIV, serviceRequestPacket, keySize, 0)
 					x++
 				}
