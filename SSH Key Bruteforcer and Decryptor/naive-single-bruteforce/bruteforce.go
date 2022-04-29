@@ -293,8 +293,9 @@ func main() {
 			potentialIV := cleanHeap[from:to]
 			//go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, to)
 
-			//this we assume that the KEY will be always exist after the IV
-			go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, to)
+			// we have to start from offset 0 again, since at some version of openssh, actually location of
+			// the key is earlier than ke IV. And on some version the key actually after the IV
+			go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, 0)
 			x++
 		}
 
