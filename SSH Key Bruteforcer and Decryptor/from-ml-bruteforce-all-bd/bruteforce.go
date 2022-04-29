@@ -90,7 +90,7 @@ func decryptCTR(key, iv, ciphertext []byte) ([]byte, error) {
 	return plaintext, nil
 }
 
-func bruteforceKey(wg *sync.WaitGroup, potentialIV, packet []byte, size int, offset int, fileName string) {
+func bruteforceKey(wg *sync.WaitGroup, potentialIV, packet []byte, size int, offset int) {
 	defer wg.Done()
 	//fmt.Println(fileName)
 	//fmt.Println(hex.Dump(packet))
@@ -288,7 +288,7 @@ func main() {
 					//for key B and D, we have do decrement the key by 2
 					//decrementIV(potentialIV)
 					//decrementIV(potentialIV)
-					go bruteforceKey(&wg, potentialIV, serviceRequestPacket, keySize, 0, info.Name())
+					go bruteforceKey(&wg, potentialIV, serviceRequestPacket, keySize, 0)
 					x++
 				}
 

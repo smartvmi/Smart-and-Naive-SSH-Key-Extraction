@@ -288,11 +288,11 @@ func main() {
 		x := 0
 		for x < gRoutineCount {
 			wg.Add(1)
-			from := i + (16 * x)
-			to := i + (16 * (x + 1))
+			from := i + (16 * x)     //IV 16 bytes
+			to := i + (16 * (x + 1)) //IV 16 bytes
 			potentialIV := cleanHeap[from:to]
 			//go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, to)
-			go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, 0)
+			go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, to)
 			x++
 		}
 

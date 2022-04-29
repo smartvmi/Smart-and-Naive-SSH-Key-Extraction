@@ -299,7 +299,7 @@ func main() {
 					to := i + (16 * (x + 1))
 					potentialIV := cleanHeap[from:to]
 					//go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, to)
-					go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, 0)
+					go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, to)
 					x++
 				}
 
