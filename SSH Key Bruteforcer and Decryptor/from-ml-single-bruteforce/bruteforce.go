@@ -203,7 +203,7 @@ func isServer2Client(src net.IP) bool {
 }
 
 func usage() {
-	fmt.Printf("usage: %s [mode (ctr/cbc)] [pcap file] [key file] [key length]\n", os.Args[0])
+	fmt.Printf("usage: %s [mode (ctr/cbc)] [pcap file] [slice file] [key length]\n", os.Args[0])
 	flag.PrintDefaults()
 	os.Exit(2)
 }
