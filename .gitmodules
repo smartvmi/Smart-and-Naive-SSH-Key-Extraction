@@ -1,0 +1,3 @@
+[submodule "libvmtrace"]
+	path = SSHKex
+	url = git@github.com:ssentanoe/libvmtrace.git
