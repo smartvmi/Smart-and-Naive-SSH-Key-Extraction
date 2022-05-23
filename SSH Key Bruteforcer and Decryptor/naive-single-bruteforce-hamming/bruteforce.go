@@ -277,8 +277,7 @@ func main() {
 	//heap = append(heap, cleanHeap...)
 	//cleanHeap = []byte{}
 
-	hammingOffset = 0
-	for true {
+	for hammingOffset = 0; hammingOffset < 100; hammingOffset++ {
 		cleanHeap = []byte{}
 		fmt.Printf("Hamming: %d\n", hammingOffset)
 		cleanupHeapHamming()
@@ -324,16 +323,15 @@ func main() {
 
 			i += increment
 		}
-		elapsed := time.Since(start).Seconds()
-		pbar.Finish()
 
-		fmt.Printf("IV : %s\n", hex.EncodeToString(iv))
-		fmt.Printf("KEY : %s\n", hex.EncodeToString(key))
-		log.Printf("It took : %fs\n", elapsed)
+		pbar.Finish()
 
 		if found {
 			break
 		}
-		hammingOffset++
 	}
+	elapsed := time.Since(start).Seconds()
+	fmt.Printf("IV : %s\n", hex.EncodeToString(iv))
+	fmt.Printf("KEY : %s\n", hex.EncodeToString(key))
+	log.Printf("It took : %fs\n", elapsed)
 }

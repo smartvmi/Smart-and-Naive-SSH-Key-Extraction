@@ -86,7 +86,7 @@ func decryptCTR(key, iv, ciphertext []byte) ([]byte, error) {
 	return plaintext, nil
 }
 
-func bruteforceKey(wg *sync.WaitGroup, potentialIV, packet []byte, size int, offset int) {
+func bruteforceKey(wg *sync.WaitGroup, potentialIV, packet []byte, size int, offset int, hammingOffset int) {
 	defer wg.Done()
 
 	i := offset
@@ -124,6 +124,7 @@ func bruteforceKey(wg *sync.WaitGroup, potentialIV, packet []byte, size int, off
 		//if int(decrypted[5]) == 6 {
 		if int(decrypted[5]) == 5 {
 			if strings.Contains(string(decrypted), "ssh-userauth") {
+				//fmt.Println(hammingOffset)
 				iv = potentialIV
 				key = potentialKey
 				found = true
@@ -296,9 +297,9 @@ func main() {
 	err := filepath.Walk(folderLocation, func(path string, info fs.FileInfo, err error) error {
 
 		if strings.Contains(path, "pcap") {
-			fmt.Println(info.Name())
+			//fmt.Println(info.Name())
 			dumpFile := strings.Replace(path, info.Name(), "", -1) + strings.Split(info.Name(), ".pcap")[0] + "-heap.raw"
-			fmt.Println(dumpFile)
+			//fmt.Println(dumpFile)
 
 			//reset everything
 			found = false //reset the found
@@ -316,8 +317,6 @@ func main() {
 
 			gRoutineCount := 5
 
-			i := 0
-
 			hammingOffset = 0
 			for hammingOffset = 0; hammingOffset < 100; hammingOffset++ {
 				if found {
@@ -327,7 +326,9 @@ func main() {
 				cleanHeap = []byte{}
 				cleanupHeapHamming()
 				cleanHeapSize := len(cleanHeap)
-				fmt.Printf("offset : %d clean : %d\n", hammingOffset, cleanHeapSize)
+				//fmt.Printf("offset : %d clean : %d\n", hammingOffset, cleanHeapSize)
+
+				i := 0
 
 				for i < cleanHeapSize {
 
@@ -345,7 +346,7 @@ func main() {
 
 						// we have to start from offset 0 again, since at some version of openssh, actually location of
 						// the key is earlier than ke IV. And on some version the key actually after the IV
-						go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, 0)
+						go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, 0, hammingOffset)
 						x++
 					}
 
