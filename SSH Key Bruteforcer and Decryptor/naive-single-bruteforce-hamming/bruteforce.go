@@ -23,14 +23,14 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"unicode"
 )
 
 var (
-	mode     = ""
-	keyLen   = 16
-	pcapFile = ""
-	heapFile = ""
+	mode          = ""
+	keyLen        = 16
+	pcapFile      = ""
+	heapFile      = ""
+	hammingOffset = 0
 
 	clientIp             = net.IPv4(192, 168, 11, 7)
 	serverIp             = net.IPv4(192, 168, 12, 213)
@@ -140,32 +140,6 @@ func readHeap() {
 	//fmt.Println(hex.Dump(heap))
 }
 
-func IsAsciiPrintable(s string) bool {
-	for _, r := range s {
-		if r > unicode.MaxASCII || !unicode.IsPrint(r) {
-			return false
-		}
-	}
-	return true
-}
-
-func cleanupHeapString() {
-	size := len(heap)
-	i := 0
-	for i < size {
-		eightBytes := heap[i : i+8]
-		stringTest := string(eightBytes[:])
-		//fmt.Println(stringTest)
-		//fmt.Println(hex.EncodeToString(eightBytes))
-		//fmt.Println(IsAsciiPrintable(stringTest))
-
-		if !IsAsciiPrintable(stringTest) {
-			cleanHeap = append(cleanHeap, eightBytes...)
-		}
-		i += 8
-	}
-}
-
 func cleanupHeap() {
 	size := len(heap)
 	zeroes := []byte{0, 0, 0, 0, 0, 0, 0, 0}
@@ -193,7 +167,7 @@ func cleanupHeapHamming() {
 		eightBytes := heap[i : i+8]
 
 		weight := bits.OnesCount64(binary.LittleEndian.Uint64(eightBytes))
-		if (weight > 32-keyLen) && (weight < 32+keyLen) {
+		if (weight > 32-hammingOffset) && (weight < 32+hammingOffset) {
 			cleanHeap = append(cleanHeap, eightBytes...)
 		}
 		i += 8
@@ -293,59 +267,70 @@ func main() {
 	readPcap()
 	readHeap()
 	fmt.Printf("Size before cleanup : %d\n", len(heap))
-	cleanupHeap()
-	heap = []byte{}
-	heap = append(heap, cleanHeap...)
-	cleanHeap = []byte{}
-	cleanupHeapString()
-	//cleanupHeapHamming()
-	cleanHeapSize := len(cleanHeap)
-	fmt.Printf("Size after cleanup : %d\n", cleanHeapSize)
 
-	//let's brute force
-	pbar := pb.StartNew(cleanHeapSize)
-	i := 0
+	//cleanupHeap()
+	//fmt.Printf("Size after cleanup naive : %d\n", len(cleanHeap))
+	//heap = []byte{}
+	//heap = append(heap, cleanHeap...)
+	//cleanHeap = []byte{}
 
-	gRoutineCount := 1
+	hammingOffset = 0
+	for true {
+		cleanHeap = []byte{}
+		fmt.Printf("Hamming: %d\n", hammingOffset)
+		cleanupHeapHamming()
+		cleanHeapSize := len(cleanHeap)
+		fmt.Printf("Size after cleanup (hamming) : %d\n", cleanHeapSize)
 
-	for i < cleanHeapSize {
+		//let's brute force
+		pbar := pb.StartNew(cleanHeapSize)
+		i := 0
 
-		var wg sync.WaitGroup
+		gRoutineCount := 5
 
-		//8-bytes aligned
-		increment := gRoutineCount * 8
+		for i < cleanHeapSize {
 
-		pbar.Add(increment)
+			var wg sync.WaitGroup
 
-		x := 0
-		for x < gRoutineCount {
-			wg.Add(1)
-			from := i + (16 * x)     //IV 16 bytes
-			to := i + (16 * (x + 1)) //IV 16 bytes
-			potentialIV := cleanHeap[from:to]
-			//go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, to)
+			increment := gRoutineCount * 8
 
-			// we have to start from offset 0 again, since at some version of openssh, actually location of
-			// the key is earlier than ke IV. And on some version the key actually after the IV
-			go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, 0)
-			x++
+			pbar.Add(increment)
+
+			x := 0
+			for x < gRoutineCount {
+				wg.Add(1)
+				from := i + (16 * x)     //IV 16 bytes
+				to := i + (16 * (x + 1)) //IV 16 bytes
+				potentialIV := cleanHeap[from:to]
+				//go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, to)
+
+				// we have to start from offset 0 again, since at some version of openssh, actually location of
+				// the key is earlier than ke IV. And on some version the key actually after the IV
+				go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, 0)
+				x++
+			}
+
+			wg.Wait()
+
+			//potentialIV := cleanHeap[i : i+16]
+			//bruteforceKey(potentialIV, serviceRequestPacket, cleanHeapSize)
+
+			if found {
+				break
+			}
+
+			i += increment
 		}
+		elapsed := time.Since(start).Seconds()
+		pbar.Finish()
 
-		wg.Wait()
-
-		//potentialIV := cleanHeap[i : i+16]
-		//bruteforceKey(potentialIV, serviceRequestPacket, cleanHeapSize)
+		fmt.Printf("IV : %s\n", hex.EncodeToString(iv))
+		fmt.Printf("KEY : %s\n", hex.EncodeToString(key))
+		log.Printf("It took : %fs\n", elapsed)
 
 		if found {
 			break
 		}
-
-		i += increment
+		hammingOffset++
 	}
-	elapsed := time.Since(start).Seconds()
-	pbar.Finish()
-
-	fmt.Printf("IV : %s\n", hex.EncodeToString(iv))
-	fmt.Printf("KEY : %s\n", hex.EncodeToString(key))
-	log.Printf("It took : %fs\n", elapsed)
 }
