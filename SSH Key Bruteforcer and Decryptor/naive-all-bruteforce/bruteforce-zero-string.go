@@ -350,7 +350,7 @@ func main() {
 					elapsed := time.Since(start).Seconds()
 					//fmt.Printf("IV : %s\n", hex.EncodeToString(iv))
 					//fmt.Printf("KEY : %s\n", hex.EncodeToString(key))
-					fmt.Printf("%s : %fs\n", info.Name(), elapsed)
+					fmt.Printf("%s : \t\t %d : %fs\n", info.Name(), cleanHeapSize, elapsed)
 
 					wg.Wait()
 					break
