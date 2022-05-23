@@ -89,6 +89,9 @@ func bruteforceKey(wg *sync.WaitGroup, potentialIV, packet []byte, size int, off
 
 	i := offset
 	for i < size {
+		if i+keyLen > size {
+			break
+		}
 		if found {
 			break
 		}
