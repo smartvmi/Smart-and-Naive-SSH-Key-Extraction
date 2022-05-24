@@ -338,9 +338,12 @@ func main() {
 
 					x := 0
 					for x < gRoutineCount {
-						wg.Add(1)
 						from := i + (16 * x)
 						to := i + (16 * (x + 1))
+						if to > cleanHeapSize {
+							break
+						}
+						wg.Add(1)
 						potentialIV := cleanHeap[from:to]
 						//go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, to)
 
