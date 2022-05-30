@@ -312,13 +312,14 @@ func main() {
 			start := time.Now()
 			readPcap(path)
 			readHeap(dumpFile)
+			heapSize := len(heap)
 
 			//cleanupHeap()
 
 			gRoutineCount := 5
 
 			hammingOffset = 0
-			for hammingOffset = 0; hammingOffset < 100; hammingOffset++ {
+			for hammingOffset = 0; hammingOffset < 32; hammingOffset++ {
 				if found {
 					break
 				}
@@ -326,6 +327,10 @@ func main() {
 				cleanHeap = []byte{}
 				cleanupHeapHamming()
 				cleanHeapSize := len(cleanHeap)
+
+				if cleanHeapSize >= heapSize {
+					break
+				}
 				//fmt.Printf("offset : %d clean : %d\n", hammingOffset, cleanHeapSize)
 
 				i := 0
@@ -362,7 +367,7 @@ func main() {
 						elapsed := time.Since(start).Seconds()
 						//fmt.Printf("IV : %s\n", hex.EncodeToString(iv))
 						//fmt.Printf("KEY : %s\n", hex.EncodeToString(key))
-						fmt.Printf("%s : \t\t %d : %fs\n", info.Name(), cleanHeapSize, elapsed)
+						fmt.Printf("%s : \t\t %d : %fs\t%d\n", info.Name(), cleanHeapSize, elapsed, hammingOffset)
 
 						//wg.Wait()
 						break
