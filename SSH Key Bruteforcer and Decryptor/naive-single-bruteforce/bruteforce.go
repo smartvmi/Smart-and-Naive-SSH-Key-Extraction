@@ -296,12 +296,12 @@ func main() {
 	readPcap()
 	readHeap()
 	fmt.Printf("Size before cleanup : %d\n", len(heap))
-	cleanupHeap()
-	heap = []byte{}
-	heap = append(heap, cleanHeap...)
-	cleanHeap = []byte{}
-	cleanupHeapString()
-	//cleanupHeapHamming()
+	//cleanupHeap()
+	//heap = []byte{}
+	//heap = append(heap, cleanHeap...)
+	//cleanHeap = []byte{}
+	//cleanupHeapString()
+	cleanupHeapHamming()
 	cleanHeapSize := len(cleanHeap)
 	fmt.Printf("Size after cleanup : %d\n", cleanHeapSize)
 
@@ -309,22 +309,26 @@ func main() {
 	pbar := pb.StartNew(cleanHeapSize)
 	i := 0
 
-	gRoutineCount := 1
+	gRoutineCount := 10
+	iteration := 1
+
+	ivLen := 16
+	alligment := 8
 
 	for i < cleanHeapSize {
 
+		//fmt.Println("ITERATION => " + strconv.Itoa(iteration))
+
 		var wg sync.WaitGroup
-
-		//8-bytes aligned
-		increment := gRoutineCount * 8
-
-		pbar.Add(increment)
 
 		x := 0
 		for x < gRoutineCount {
 			wg.Add(1)
-			from := i + (16 * x)     //IV 16 bytes
-			to := i + (16 * (x + 1)) //IV 16 bytes
+			from := i + (ivLen * x)     //IV 16 bytes
+			to := i + (ivLen * (x + 1)) //IV 16 bytes
+
+			//fmt.Println("G" + strconv.Itoa(x) + " -- " + strconv.Itoa(from) + ":" + strconv.Itoa(to))
+
 			potentialIV := cleanHeap[from:to]
 			//go bruteforceKey(&wg, potentialIV, serviceRequestPacket, cleanHeapSize, to)
 
@@ -343,7 +347,22 @@ func main() {
 			break
 		}
 
+		//8-bytes aligned
+		increment := alligment
+
+		//when it is odd, we move by 8 bytes only
+		if iteration%2 != 0 {
+			increment = alligment
+		} else { //when it is even, we move it further to avoid double check that previously done
+			increment = gRoutineCount*ivLen - alligment
+		}
+		//fmt.Println("increment => " + strconv.Itoa(increment))
+		//fmt.Println("")
+
+		pbar.Add(increment)
+
 		i += increment
+		iteration++
 	}
 	elapsed := time.Since(start).Seconds()
 	pbar.Finish()
